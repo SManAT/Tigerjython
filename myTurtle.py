@@ -126,7 +126,7 @@ class myTurtle:
     
 
     
-    def SVG_Move(self, x, y):
+    def SVG_MoveTo(self, x, y):
         """ move to Coordinates """
         self.Pkt.append(["M %s,%s" % (x,y)])
     
