@@ -15,6 +15,7 @@ class myLSystem:
 	debug=False
 	code=[]
 	length=100;
+	alphabet=""
 
 	def __init__(self):
 		pass
@@ -27,17 +28,45 @@ class myLSystem:
 	def addRegel(self, regel):
 		self.regeln.append(regel)
 
+	''' remove the alphabet '''
+	def getFinalCode(self, code):
+		erg=""
+		for char in code:
+			if self.is_Alphabet(char)==False:
+				erg += char
+		return erg
+
+	''' checks if an character is from alphabet '''
+	def is_Alphabet(self, char):
+		found = False
+		for aChar in self.alphabet:
+			if aChar==char:
+				found=True
+		return found
+
 	''' Die Iterationen werden durchgeführt '''
 	def iterate(self, iterationen):
 		ht()
 		code = self.axiom
-		for i in range(iterationen+1):
-			#arbeite alle Regeln durch
-			for k in range(len(self.regeln)):
-				item = self.regeln[k]
-				code = code.replace(item[0], item[1])
+		if iterationen>0:
+			for i in range(iterationen):
+				new_code = ""
+				for c in code:
+					#Regeln durcharbeiten
+					replaced=False
+					for k in range(len(self.regeln)):
+						item = self.regeln[k]
+						if c==item[0]:
+							new_code += item[1]
+							replaced=True
+					if replaced==False:
+						#Zeichen übernehmen
+						new_code += c
+
+				code = new_code
 				self.output(code)
-		print "Fertiger Code: %s" % (code)
+
+		print "Fertiger Code: %s" % (self.getFinalCode(code))
 		self.code = code
 		st()
 
@@ -64,7 +93,11 @@ class myLSystem:
 				Tool.SVG_MoveTo(getX(), getY())
 				#self.output("f: %s" % self.length)
 			else:
-				#default
-				#self.output("Konstante: %s" % char)
-				forward(self.length)
-				Tool.SVG_DrawTo(getX(), getY())
+				#check if constant or alphabet
+				if self.is_Alphabet(char):
+					#ist im Alphabet > mach nichts
+					pass
+				else:
+					#wird wie F behandelt
+					forward(self.length)
+					Tool.SVG_DrawTo(getX(), getY())
