@@ -20,18 +20,38 @@ sys.path.insert(0, libPath)
 Tool = myTurtle(800)
 Tool.makePlayground()
 
-#während des Zeichnes, musst du die SVG Elemente abspeichern
-#diese Befehle gibt es momentan
-
+#during the drawing you have to write also to SVG
+#these commands exists up to now
 Tool.SVG_Move(x, y)
 Tool.SVG_DrawTo(x, y)
 Tool.SVG_Circle(x, y, radius)
 
-
-#am Ende deiner Zeichnung wird die Datei erstellt        
-#Ausgabe nach SVG ==================================
+#write to SVG ==================================
 fh = Tool.open_file("MeineZeichnung.svg")
 css = "stroke:#000000;stroke-width:3px;fill:none;stroke-opacity:1"
 Tool.write_file_path(fh, css)
 Tool.close_file(fh)
+```
+
+### Lindenmayer System
+```
+LSystem = myLSystem()
+LSystem.length = 100
+LSystem.alpha = 120
+LSystem.axiom = "F-G-G"
+
+#Rules
+regel = ["G", "GG"]
+regel_1 = ["F", "F-G+F+G-F"]
+#add the rules
+LSystem.addRegel(regel)
+LSystem.addRegel(regel_1)
+print "Axiom: %s" % (LSystem.axiom)
+
+#iterate
+LSystem.debug = True;
+LSystem.iterate(iterationen)
+
+#draw
+LSystem.draw(Tool)
 ```
