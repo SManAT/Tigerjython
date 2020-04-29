@@ -59,16 +59,16 @@ LSystem.draw(Tool)
 ```python
 v1 = Vector2D(1,2)
 v2 = Vector2D(3,3)
-v1.print()
-v2.print()
+v1.output()
+v2.output()
 
 v1.add(v2)
-v1.print()
+v1.output()
 v1.sub(v2)
-v1.print()
+v1.output()
 
 v1.unit()
-v1.print()
+v1.output()
 
 print(v1.getAngle(v2))
 ```

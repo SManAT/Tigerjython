@@ -18,32 +18,32 @@ class Vector(object):
         self._koord = [x,y,z]
         self._name = "vec"
 
-    def _getX(self):
+    def getX(self):
         return self._koord[0]
 
-    def _getY(self):
+    def getY(self):
         return self._koord[1]
 
-    def _getZ(self):
+    def getZ(self):
         return self._koord[2]
 
-    def _setX(self, x):
+    def setX(self, x):
         self._koord[0] = x
 
-    def _setY(self, y):
+    def setY(self, y):
         self._koord[1] = y
 
-    def _setZ(self, z):
+    def setZ(self, z):
         self._koord[2] = z
 
-    def _setName(self, name):
+    def setName(self, name):
         self._name = name
 
-    def _getName(self):
+    def getName(self):
         return self._name
 
     ''' print out the Vector '''
-    def print(self, dim):
+    def output(self, dim):
         str=""
         for i in range(0, dim):
             str += "%s, " % self._koord[i]
@@ -67,15 +67,15 @@ class Vector3D(Vector):
         self._koord = [x,y,z]
         self._name = "vec"
 
-    def print(self):
+    def output(self):
         ''' print out the Vector '''
-        super().print(3)
+        super().output(3)
 
     def add(self, v2):
         """ 3D Vector Add """
-        self._koord[0] += v2._getX()
-        self._koord[1] += v2._getY()
-        self._koord[2] += v2._getZ()
+        self._koord[0] += v2.getX()
+        self._koord[1] += v2.getY()
+        self._koord[2] += v2.getZ()
 
 #-------------------------------------------------------------------------------
 
@@ -85,19 +85,27 @@ class Vector2D(Vector):
         self._koord = [x,y,0]
         self._name = "vec"
 
-    def print(self):
+    def createVector(self, P1, P2):
+        '''
+        create a vector between 2 Points, P2 -P1
+        Point = Array e.g. [2,-4]
+        '''
+        self._koord[0] = P2[0] - P1[0]
+        self._koord[1] = P2[1] - P1[1]
+
+    def output(self):
         ''' print out the Vector '''
-        super().print(2)
+        super().output(2)
 
     def add(self, v2):
         """ 2D Vector Add """
-        self._koord[0] += v2._getX()
-        self._koord[1] += v2._getY()
+        self._koord[0] += v2.getX()
+        self._koord[1] += v2.getY()
 
     def sub(self, v2):
         """ 2D Vector Sub """
-        self._koord[0] -= v2._getX()
-        self._koord[1] -= v2._getY()
+        self._koord[0] -= v2.getX()
+        self._koord[1] -= v2.getY()
 
     def scalar(self, k):
         """ 2D Vector multiply with scalar """
@@ -115,7 +123,7 @@ class Vector2D(Vector):
 
     def scalarProduct(self, v):
         """ calculate the scalar Product """
-        return self._koord[0] * v._getX() + self._koord[1] * v._getY()
+        return self._koord[0] * v.getX() + self._koord[1] * v.getY()
 
 
     def getAngle(self, v):
