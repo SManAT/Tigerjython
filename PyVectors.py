@@ -108,35 +108,17 @@ class Vector2D(Vector):
         """ get length of vector """
         return super().length()
 
-    def unit(self, v):
-        """ make vectoe length 1 """
-        l = self.length(v)
-        return self.scalar(1/l, v)
+    def unit(self):
+        """ make vector length 1 """
+        l = self.length()
+        self.scalar(1/l)
 
-    def scalarProduct(self, a, b):
+    def scalarProduct(self, v):
         """ calculate the scalar Product """
-        return a[0]*b[0]+a[1]*b[1]
+        return self._koord[0] * v._getX() + self._koord[1] * v._getY()
 
-    def getAngle(self, p1, p2):
-        """ get the angle from vector between p1, p2 """
-        a = self.sub(p2, p1)
-        #x axis
-        b = [10, 0]
 
-        c = self.scalarProduct(a, b) / self.length(a) / self.length(b)
+    def getAngle(self, v):
+        """ get the angle from vector between self and v """
+        c = self.scalarProduct(v) / self.length() / v.length()
         return math.acos(c)*180/math.pi
-
-
-#Test
-v1 = Vector2D(1,2)
-v2 = Vector2D(3,3)
-v1.print()
-v2.print()
-
-
-v1.add(v2)
-v1.print()
-v1.sub(v2)
-v1.print()
-
-print(v1.length())

@@ -15,9 +15,9 @@ sys.path.insert(0, libPath)
 ```
 
 ### Inside the Code
-```
+```python
 #init the Library
-Tool = myTurtle(800)
+Tool = PyTurtle(800)
 Tool.makePlayground()
 
 #during the drawing you have to write also to SVG
@@ -34,8 +34,8 @@ Tool.close_file(fh)
 ```
 
 ### Lindenmayer System
-```
-LSystem = myLSystem()
+```python
+LSystem = PyLSystem()
 LSystem.length = 100
 LSystem.alpha = 120
 LSystem.axiom = "F-G-G"
@@ -54,4 +54,21 @@ LSystem.iterate(iterationen)
 
 #draw
 LSystem.draw(Tool)
+```
+### Vectors
+```python
+v1 = Vector2D(1,2)
+v2 = Vector2D(3,3)
+v1.print()
+v2.print()
+
+v1.add(v2)
+v1.print()
+v1.sub(v2)
+v1.print()
+
+v1.unit()
+v1.print()
+
+print(v1.getAngle(v2))
 ```
