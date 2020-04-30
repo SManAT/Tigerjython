@@ -43,7 +43,7 @@ class Vector(object):
         return self._name
 
     ''' print out the Vector '''
-    def output(self, dim):
+    def _output(self, dim):
         str=""
         for i in range(0, dim):
             str += "%s, " % self._koord[i]
@@ -69,7 +69,7 @@ class Vector3D(Vector):
 
     def output(self):
         ''' print out the Vector '''
-        super().output(3)
+        self._output(3)
 
     def add(self, v2):
         """ 3D Vector Add """
@@ -95,7 +95,7 @@ class Vector2D(Vector):
 
     def output(self):
         ''' print out the Vector '''
-        super().output(2)
+        self._output(2)
 
     def add(self, v2):
         """ 2D Vector Add """
