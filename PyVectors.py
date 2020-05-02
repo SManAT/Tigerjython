@@ -54,9 +54,7 @@ class Vector(object):
     ''' length of the vector '''
     def length(self):
         return math.sqrt(
-            self._koord[0]*self._koord[0] +
-            self._koord[1]*self._koord[1] +
-            self._koord[2]*self._koord[2]
+            self._koord[0]**2 + self._koord[1]**2 + self._koord[2]**2
             )
 
 #-------------------------------------------------------------------------------
@@ -121,6 +119,9 @@ class Vector2D(Vector):
         l = self.length()
         self.scalar(1/l)
 
+    def multiply(self, v):
+		return self.scalarProduct(v)
+		
     def scalarProduct(self, v):
         """ calculate the scalar Product """
         return self._koord[0] * v.getX() + self._koord[1] * v.getY()
