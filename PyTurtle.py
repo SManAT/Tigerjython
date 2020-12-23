@@ -109,42 +109,144 @@ class PyTurtle:
 
     def write_file(self, handle, data):
         handle.write(data+"\n")
+    
+    def getX(self, data):
+        """extract X from e.g. 200,345"""
+        items = data.split(",")
+        return items[0].strip()
+    
+    def getY(self, data):
+        """extract Y from e.g. 200,345"""
+        items = data.split(",")
+        return items[1].strip()  
+    
+    def getLastMovePoint(self, data):
+        """extract the last Move point if there are more of them"""
+        # M 266.5,200.0 M 66.5,400.0 
+        pts = data.split("M")        
+        return pts[len(pts)-1].strip()
 
-    def write_file_path(self, handle, css=None):
-        if css is None:
-            css = "fill:none;stroke:#000000;stroke-width:0.3px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+        
+    def parsePktStr(self, data):
+        """extract attributes and create SVG Lines"""
+        # clear Empty Attributes []
+        pattern = '[]'
+        replaceWith = ''
+        data = data.replace(pattern, replaceWith)
+        
+        # break data at Atributes [xxxxx]
+        erg = ""
+        newdata = []
+        for char in data:
+            if char != "[" and char != "]" and char != "M":
+                erg += char
+            else:
+                if char == "M":
+                    # beginning Move Point
+                    newdata.append(erg)
+                    erg = "M "
+                if char == "[":
+                    # beginnender Atrribut Block
+                    newdata.append(erg)
+                    erg = ""
+                if char == "]":
+                    # Ende Atrribut Block
+                    newdata.append("[%s]" % erg)
+                    erg = ""
+        newdata.append(erg)
+        
+        # Erstelle die SVGgetLastMovePoint Paths
+        data = []
+        style = ""
+        for item in newdata:
+            if len(item)>0:
+                if item[0] == "M":
+                    # Move To Command
+                    last_item = self.getLastMovePoint(item)
+                else:
+                    if item[0] == "[":
+                        # Attribut
+                        style = item[1:-1]  # ohne []
+                        pattern = ','
+                        replaceWith = ' '
+                        style = style.replace(pattern, replaceWith)
+                    else:
+                        line = '<line x1="%s" y1="%s" x2="%s" y2="%s" %s />' % (self.getX(last_item), self.getY(last_item), self.getX(item), self.getY(item), style)
+                        style = ""
+                        data.append(line)        
+                        last_item = item
+        return data
+
+    def write_file_path(self, handle):
+        """create SVG Data, color and width are in front within []"""
         pktstr = self.array_to_SVG()
-        path = '<path id="path4524" d="%s" style="%s" />' % (pktstr, css)
-        self.write_file(handle, path)
+        paths = self.parsePktStr(pktstr)
+        
+        
+        for p in paths:
+            self.write_file(handle, p)
 
         #extra shapes
         for i in range(len(self.extra_svg_shapes)):
             item = self.extra_svg_shapes[i]
             #css einsetzen
             item = item[:-2]
-            erg = '%s style="%s" />' % (item, css)
+            erg = '%s />' % (item)
             self.write_file(handle, erg)
 
 
-
-    def SVG_MoveTo(self, x, y):
+    def SVG_MoveTo(self, x, y, **kwargs):
         """ move to Coordinates """
-        self.Pkt.append(["M %s,%s" % (x,y)])
+        erg = "M %s,%s"
+        if "color" in kwargs:
+			c = kwargs.get("color")
+			erg += ", %s" % c
+        if "width" in kwargs:
+			w = kwargs.get("width")
+			erg += ", %s" % w
+        self.Pkt.append([erg % (x, y)])
 
-    def SVG_DrawTo(self, x, y):
-        """ move to Coordinates """
-        self.Pkt.append(["%s,%s" % (x,y)])
+    def SVG_DrawTo(self, x, y, **kwargs):
+		"""
+		move to Coordinates
+		kwargs > color='#4567AE', width=2
+		"""
+		erg = "%s,%s"
+		if "color" in kwargs:
+			c = kwargs.get("color")
+			erg += ", %s" % c
+		if "width" in kwargs:
+			w = kwargs.get("width")
+			erg += ", %s" % w
+			
+		self.Pkt.append([erg % (x, y)])
 
-    def SVG_Circle(self, x, y, radius):
+    def SVG_Circle(self, x, y, radius, **kwargs):
         """ draws a circle, non filled """
         #Transformation to center
         x = x + self.width/2
         y = y + self.height/2
-        self.extra_svg_shapes.append("<circle cx=\"%s\" cy=\"%s\" r=\"%s\" />" % (x,y,radius))
+        
+        style=""
+        if "color" in kwargs:
+			c = kwargs.get("color")
+			style += 'stroke="%s"' % c
+        if "width" in kwargs:
+			w = kwargs.get("width")
+			style += ' stroke-width="%s"' % w
+        self.extra_svg_shapes.append('<circle cx="%s" cy="%s" r="%s" %s fill="transparent" style="fill:none" />' % (x,y,radius, style))
 
     def initPktArray(self, x, y):
         self.Pkt=[]
         self.Pkt.append(["M %s,%s" % (x,y)])
+        
+    def getColor(self, data):
+        """create Color for SVG Output"""
+        return 'stroke="%s"' % data.strip()
+
+    def getWidth(self, data):
+        """create Width for SVG Output"""
+        return 'stroke-width="%s"' % data.strip()
 
     #Übergeben wird ein Array aus Array bestehenden aus Punkten mit x,y Koordinaten
     #Erstellt wird ein  String Array aus Punkten im SVG Style
@@ -165,13 +267,35 @@ class PyTurtle:
             if(content[0:2] == "M "):
                 content = content[2:len(content)]
                 prefix="M "
+            items = content.split(",")
+            
+            if items[0]:
+				x = float(items[0]) + self.width/2
+            if items[1]:
+				y = float(items[1]) + self.height/2
+            
+            # Attribute String for Lines
+            attrib = "["
+            try:
+                # color
+                color = self.getColor(items[2])
+                attrib += "%s," % color
+            except Exception as e: 
+				pass
+				
+            try:
+                # width
+                width = self.getWidth(items[3])
+                attrib += "%s" % width
+            except Exception as e: 
+				pass
+            attrib += "]"
+            data_str = "%s%s%s,%s" % (attrib, prefix, x, y)
 
-            x,y = content.split(",")
-            x = float(x)+self.width/2
-            y = float(y)+self.height/2
-            TransformedPkt.append("%s%s,%s" % (prefix,x,y))
+            TransformedPkt.append(data_str)
         erg=""
-        for i in range(len(TransformedPkt)):
+        
+        for i in range(0, len(TransformedPkt)):
             erg += TransformedPkt[i]
             if i!=(len(TransformedPkt)-1):
                 erg += " "
