@@ -4,7 +4,7 @@ a library to use with Tigerjython
 ## Usage
 ### How to include the Library
 
-Change the Python Path, in order to fins your Library
+Change the Python Path, in order to find your Library
 ```
 import os
 rootPath = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -12,6 +12,9 @@ rootPath = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 libPath = os.path.join(rootPath, "")
 #add libPath to SystemPath
 sys.path.insert(0, libPath)
+
+# e.g.
+from PyTurtle import PyTurtle
 ```
 
 ### Inside the Code
