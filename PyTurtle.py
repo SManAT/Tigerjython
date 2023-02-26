@@ -18,7 +18,7 @@ class PyTurtle:
     frame = None
     Pkt = []
     extra_svg_shapes = []
-    defaultstyle = "stroke:rgb(0,0,0);stroke-width:2"
+    defaultstyle = "fill:none;stroke:rgb(0,0,0);stroke-width:2"
 
     def __init__(self, size=400):
         self.size = size
@@ -34,6 +34,9 @@ class PyTurtle:
 
     # def __del__(self):
     #    print "Destructor started"
+
+    def setDefaultStyle(self, str):
+      self.defaultstyle = str
 
     def getFrame(self):
         return self.frame
@@ -132,6 +135,7 @@ class PyTurtle:
     def SplitPoints(self, data):
         """ 
         splitte Points 
+        828.442325904,452.0944533##fill:none;fill-opacity:1;stroke:rgb(255,0,0);stroke-width:2 23,12## 23,23....
         M533.0,400.0 [stroke:#4567AE,stroke-width:2]733.0,500.0 -->
         M533.0,400.0, [stroke:#4567AE,stroke-width:2], 733.0,500.0
         """
@@ -150,53 +154,60 @@ class PyTurtle:
                 erg.append(item)
         return erg
 
+    def getStyles(self, txt):
+        """ extract from '633.0,400.0##stroke:rgb(255,0,0);stroke-width:2' styles and coordinates """
+        parts = txt.split("##")
+        # gibt es immer
+        coordinates = parts[0]
+        # muss es nicht geben
+        try:
+          styles = parts[1]
+        except:
+          styles = ""
+        return [coordinates, styles]
+
+    def clearStyleSeperator(self, pt):
+      """ 230,456## zu 230,456 """
+      data = pt.split('##')
+      return data[0]
+
     def parsePktStr(self, data):
         """extract attributes and create SVG Lines"""
-        # clear Empty Attributes []
-        pattern = '[]'
-        replaceWith = ''
-        data = data.replace(pattern, replaceWith)
+        # Data sieht so aus 
+        # M533.0,400.0## M533.0,400.0## 633.0,400.0##stroke:rgb(255,0,0);stroke-width:2 633.0,500.0##stroke:rgb(255,0,0);stroke-width:2
 
-        # break data at Atributes [xxxxx]
-        erg = ""
-        newdata = []
-        # print("Data: %s" % data)
-        # M533.0,400.0 M533.0,400.0 [stroke="#4567AE",stroke-width="2"]733.0,500.0
+        # Split am Leerzeichen
         newdata = self.SplitPoints(data)
 
         # Erstelle die SVG Linien
         data = []
         style = ""
-        # ['M533.0,400.0', 'M533.0,400.0', '[stroke="#4567AE",stroke-width="2"]733.0,500.0']
+        # ['M533.0,400.0##', 'M533.0,400.0##', '633.0,400.0##stroke:rgb(255,0,0);stroke-width:2', '633.0,500.0##stroke:rgb(255,0,0);stroke-width:2']
         if self.debug:
           print("Newdata: %s" % newdata)
 
-        # we draw allway lines from startPt to endPt
+        # we draw allwasy lines from startPt to endPt
         startPt = ""
         endPt = ""
         for item in newdata:
             if len(item) > 0:
                 # print("Item: %s" % item)
-                if item[0] == "M":
+                new_item = self.getStyles(item)
+                if new_item[0][0] == "M":
                     # Move To Command
-                    startPt = item[1:]  # ohne M
-                elif item[0] == "[":
-                    # style for the next whatever, store it
-                    style = item[1:-1]  # ohne []
-                    pattern = ','
-                    replaceWith = ';'
-                    style = style.replace(pattern, replaceWith)
+                    startPt = self.clearStyleSeperator(item[1:])  # ohne M                
                 else:
                     # Start und Endpoint the same?
-                    endPt = item
-                    
+                    endPt = self.clearStyleSeperator(new_item[0])
+                    style = new_item[1]
+
                     if self.getX(startPt) != self.getX(endPt) or self.getY(startPt) != self.getY(endPt):
                         if len(style) == 0:
                             style = self.defaultstyle
                         if self.debug:
                           print("Line:  %s, %s -> %s, %s" % (self.getX(startPt), self.getY(startPt), self.getX(endPt), self.getY(endPt)))    
+                        print("Line:  %s, %s -> %s, %s" % (self.getX(startPt), self.getY(startPt), self.getX(endPt), self.getY(endPt)))    
                         line = '<line x1="%s" y1="%s" x2="%s" y2="%s" style="%s" />' % (self.getX(startPt), self.getY(startPt), self.getX(endPt), self.getY(endPt), style)
-                        style = ""
                         data.append(line)
                     else:
                         pass
@@ -219,29 +230,38 @@ class PyTurtle:
             erg = '%s />' % (item)
             self.write_file(handle, erg)
 
+    def handle_Styles(self, kwargs):
+      styles = ""
+      if "fill" in kwargs:
+            w = kwargs.get("fill")
+            styles += ';fill:%s;fill-opacity:1' % w
+      if "stroke" in kwargs:
+          w = kwargs.get("stroke")
+          styles += ";stroke:%s" % w
+      if "stroke_width" in kwargs:
+          w = kwargs.get("stroke_width")
+          styles += ";stroke-width:%s" % w
+      # dont start with ,
+      if styles != "":
+        if styles[:1]==";":
+          styles = styles[1:]
+      return styles
+
     def SVG_MoveTo(self, x, y, **kwargs):
         """ move to Coordinates """
         erg = "M%s,%s"
-        if "color" in kwargs:
-            c = kwargs.get("color")
-            erg += ", %s" % c
-        if "width" in kwargs:
-            w = kwargs.get("width")
-            erg += ", %s" % w
+        # Move to hat keine Styles!
         self.Pkt.append([erg % (x, y)])
 
     def SVG_DrawTo(self, x, y, **kwargs):
-        """
-        move to Coordinates
-        kwargs > color:#4567AE, width:2
-        """
+        """ move to Coordinates """
         erg = "%s,%s"
-        if "color" in kwargs:
-            c = kwargs.get("color")
-            erg += ", %s" % c
-        if "width" in kwargs:
-            w = kwargs.get("width")
-            erg += ", %s" % w
+        if len(kwargs.items()) != 0:
+          styles = self.handle_Styles(kwargs)
+        else:
+          styles = self.defaultstyle
+        # Styles werden von den Koordinaten mit ## getrennt
+        erg += "##%s" % styles
         self.Pkt.append([erg % (x, y)])
 
     def SVG_Circle(self, x, y, radius, **kwargs):
@@ -250,15 +270,13 @@ class PyTurtle:
         x = x + self.width/2
         y = y + self.height/2
 
-        style = ""
-        if "color" in kwargs:
-            c = kwargs.get("color")
-            style += 'stroke:%s' % c
-        if "width" in kwargs:
-            w = kwargs.get("width")
-            style += ' stroke-width:%s' % w
+        if len(kwargs.items()) != 0:
+          styles = self.handle_Styles(kwargs)
+        else:
+          styles = self.defaultstyle
+
         self.extra_svg_shapes.append(
-            '<circle cx="%s" cy="%s" r="%s" %s fill="transparent" style="fill:none" />' % (x, y, radius, style))
+            '<circle cx="%s" cy="%s" r="%s" style="%s" />' % (x, y, radius, styles))
 
     def initPktArray(self, x, y):
         self.Pkt = []
@@ -284,7 +302,7 @@ class PyTurtle:
         TransformedPkt = []
         if self.debug:
           print("Original Data: %s" % self.Pkt)
-        
+
         for i in range(len(self.Pkt)):
             data = self.Pkt[i]
 
@@ -294,30 +312,24 @@ class PyTurtle:
             if(content[0] == "M"):
                 content = content[1:len(content)]
                 prefix = "M"
-            items = content.split(",")
 
+            # are there Styles [3,5##color: rgb... ]?
+            parts = content.split("##")
+            coordinates = parts[0]
+            items = coordinates.split(",")
+            
+            # muss es nicht geben
+            try:
+              styles = parts[1]
+            except:
+              styles = ""
+            
             if items[0]:
                 x = float(items[0]) + self.width/2
             if items[1]:
                 y = float(items[1]) + self.height/2
 
-            # Attribute String for Lines
-            attrib = "["
-            try:
-                # color
-                color = self.getColor(items[2])
-                attrib += "%s," % color
-            except Exception as e:
-                pass
-
-            try:
-                # width
-                width = self.getWidth(items[3])
-                attrib += "%s" % width
-            except Exception as e:
-                pass
-            attrib += "]"
-            data_str = "%s%s%s,%s" % (attrib, prefix, x, y)
+            data_str = "%s%s,%s##%s" % (prefix, x, y, styles)
             TransformedPkt.append(data_str)
 
         erg = ""

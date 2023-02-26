@@ -31,9 +31,18 @@ Tool.SVG_Circle(x, y, radius)
 
 #write to SVG ==================================
 fh = Tool.open_file("MeineZeichnung.svg")
-css = "stroke:#000000;stroke-width:3px;fill:none;stroke-opacity:1"
 Tool.write_file_path(fh, css)
 Tool.close_file(fh)
+```
+You can use some CCS Styles for the shapes
+There is an Default Style for all Shapes. You can change it with
+```
+Tool.setDefaultStyle("fill:none;stroke:rgb(0,0,0);stroke-width:2")
+```
+Also you can specify Styles for each Methode
+```
+Tool.SVG_DrawTo(x, y, stroke="rgb(255,0,0)", stroke_width="2")
+Tool.SVG_Circle(x, y, radius, fill="none", stroke="rgb(0,0,0)", strokewidth="2")
 ```
 
 ### Lindenmayer System
