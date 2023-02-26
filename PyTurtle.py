@@ -35,8 +35,8 @@ class PyTurtle:
     # def __del__(self):
     #    print "Destructor started"
 
-    def setDefaultStyle(self, str):
-      self.defaultstyle = str
+    def setDefaultStyle(self, **kwargs):
+      self.defaultstyle = self.handle_Styles(kwargs)
 
     def getFrame(self):
         return self.frame
